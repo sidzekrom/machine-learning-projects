@@ -20,7 +20,7 @@ end = np.reshape(img_out, (1, (L2-L1)*(H2-H1)))
 dimensions = [start.shape[1], 100, end.shape[1]]
 #dimensions = [10, 5, 10]
 transitions = [0.00005 * (2 * np.random.rand(dimensions[0], dimensions[1]) - 1.0),\
-                0.08 * (2 * np.random.rand(dimensions[1], dimensions[2]) - 1.0)]
+                0.1 * (2 * np.random.rand(dimensions[1], dimensions[2]) - 1.0)]
 print("Initialized transitions")
 def get_output():
     S = start
