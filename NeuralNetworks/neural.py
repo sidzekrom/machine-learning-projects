@@ -19,24 +19,26 @@ end = np.reshape(img_out, (1, (L2-L1)*(H2-H1)))
 #initialize layer dimensions and transition weights
 dimensions = [start.shape[1], 100, end.shape[1]]
 #dimensions = [10, 5, 10]
-transitions = [np.random.randn(dimensions[x], dimensions[x+1]) for x in range(0, len(dimensions)-1)]
+transitions = [0.00005 * (2 * np.random.rand(dimensions[0], dimensions[1]) - 1.0),\
+                0.08 * (2 * np.random.rand(dimensions[1], dimensions[2]) - 1.0)]
 print("Initialized transitions")
 def get_output():
     S = start
     for x in range(0, len(transitions)):
         S = np.dot(S, transitions[x])
-        print S
+        print "trans", S
         S = np.tanh(S)
     return S
 
 out = get_output()
 
 out = np.reshape(out, (H2-H1, L2-L1))
+out = (np.vectorize(lambda x: (x + 1.0) / 2.0))(out)
 print(out)
-#cv2.imshow('image', img_in)
-#cv2.imshow('image2', img_out)
-#cv2.imshow('output', out)
-#cv2.waitKey(0)
+cv2.imshow('image', img_in)
+cv2.imshow('image2', img_out)
+cv2.imshow('output', out)
+cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-# cv2.imwrite('out.png', img_in)
+#cv2.imwrite('out.png', img_in)
