@@ -3,26 +3,28 @@ import numpy as np
 
 train_image = cv2.imread('images/in1.png', 0)
 #crop the image for consistency
-h1 = 0
-h2 = 30
-l1 = 0
-l2 = 70
-H1 = 0
-L1 = 0
+h1 = 300
+h2 = 303
+l1 = 600
+l2 = 603
+H1 = 300
+H2 = 304
+L1 = 600
+L2 = 604
 nu=0.1 #our value of nu
-H2, L2 = train_image.shape[:2]
+
 train_image = np.vectorize(lambda x: x/256.0)(train_image)
 img_in = train_image[h1:h2, l1:l2]
-img_out = train_image
+img_out = train_image[H1:H2, L1:L2]
 #make it into a long array
 start = np.reshape(img_in, (1, (l2-l1)*(h2-h1)))
 end = np.reshape(img_out, (1, (L2-L1)*(H2-H1)))
 #Begin neural networks now
 #initialize layer dimensions and transition weights
-dimensions = [start.shape[1], 100, end.shape[1]]
+dimensions = [start.shape[1], 10, end.shape[1]]
 #dimensions = [10, 5, 10]
-transitions = [(100.0/dimensions[0]) * (2 * np.random.rand(dimensions[0], dimensions[1]) - 1.0),\
-                (100.0/dimensions[1]) * (2 * np.random.rand(dimensions[1], dimensions[2]) - 1.0)]
+transitions = [(4.0/dimensions[0]) * (np.random.rand(dimensions[0], dimensions[1])),\
+                (4.0/dimensions[1]) * (np.random.rand(dimensions[1], dimensions[2]))]
 
 print("Initialized transitions")
 def back_propagation():
@@ -60,7 +62,7 @@ def back_propagation():
 		#Once again, there is probably a faster way to do this
 		#We take the result and scale it by the previous node's value. Then, we add to the transitions, which is now the updated version
 		for y in range(0, len(intermediate_values[x][0])):
-			transitions[x][y]+=(nu*intermediate_values[x][0][y])*deltas[x+1][0] #move 0.1 times the gradient at a time
+			transitions[x][y]-=(nu*intermediate_values[x][0][y])*deltas[x+1][0] #move 0.1 times the gradient at a time
 		
 
 
@@ -70,8 +72,20 @@ def get_output():
         S = np.dot(S, transitions[x])
         S = np.tanh(S)
     return S
+#print(transitions[0])
+#print(transitions[1])
+for x in range(0, 100):
+	print(x)
+	print("Neural Image")
+	print(get_output())
+	print("Out Image")
+	print(end)
+	print("Transitions1")
+	print(transitions[0])
+	print("Transitions2")
+	print(transitions[1])
+	back_propagation()
 
-back_propagation()
 out = get_output()
 
 out = np.reshape(out, (H2-H1, L2-L1))
@@ -79,11 +93,11 @@ out = (np.vectorize(lambda x: (x + 1.0) / 2.0))(out)
 """
 print("out image")
 print(out)
+
 cv2.imshow('image', img_in)
 cv2.imshow('image2', img_out)
 cv2.imshow('output', out)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
-#cv2.imwrite('out.png', img_in)
 """
+#cv2.imwrite('out.png', img_in)
