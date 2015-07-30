@@ -126,7 +126,7 @@ out = get_output()
 
 out = np.reshape(out, (H2-H1, L2-L1))
 out = (np.vectorize(lambda x: (x + 1.0) / 2.0))(out)
-"""
+
 print("out image")
 print(out)
 cv2.imshow('image', img_in)
@@ -134,5 +134,5 @@ cv2.imshow('image2', img_out)
 cv2.imshow('output', out)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-"""
+
 #cv2.imwrite('out.png', img_in)
