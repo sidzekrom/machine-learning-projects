@@ -4,14 +4,14 @@ import numpy as np
 train_image = cv2.imread('images/in1.png', 0)
 #crop the image for consistency
 h1 = 0
-h2 = 303
+h2 = 30
 l1 = 0
-l2 = 303
+l2 = 30
 H1 = 0
-H2 = 370
+H2 = 37
 L1 = 0
-L2 = 370
-nu=0.001 #our value of nu
+L2 = 37
+nu=0.1 #our value of nu
 
 train_image = np.vectorize(lambda x: x/256.0)(train_image)
 img_in = train_image[h1:h2, l1:l2]
@@ -75,7 +75,7 @@ def backProp():
     errorgrad = []
     desiredoutput = end[0]
     actualoutput = layersin[transLen][0]
-    for i in range(len(end)):    
+    for i in range(len(end[0])):    
         currentdelta = np.array([1 - ((actualoutput[i]) ** 2)])
         deltacollection = [currentdelta]
         for i in range(transLen-1):
@@ -97,8 +97,9 @@ def backProp():
         #this iteration we will compute the error derivative with respect to
         #the i-th weight matrix
         errorgradterm = 0
-        for j in range(len(end)):
-            errorgradterm += np.dot(layersin[i].T, deltastream[j][i]) *\
+        for j in range(len(end[0])):
+            derivative = np.dot(layersin[i].T, deltastream[j][i])
+            errorgradterm += derivative *\
                              (actualoutput[j] - desiredoutput[j])
         errorgrad.append(errorgradterm)
     #length of errorgrad is the same as length of transitions.
@@ -118,8 +119,9 @@ def get_output():
 
 #print(transitions[0])
 #print(transitions[1])
-for x in range(0, 50):
+for x in range(0, 10):
     print(x)
+    '''
     print("Neural Image")
     print(get_output())
     print("Out Image")
@@ -128,6 +130,7 @@ for x in range(0, 50):
     print(transitions[0])
     print("Transitions2")
     print(transitions[1])
+    '''
     backProp() #replace this line with #back_propagation to try Jacob and
                #backProp to try Sid's implementation
 
