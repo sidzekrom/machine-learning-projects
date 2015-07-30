@@ -3,14 +3,14 @@ import numpy as np
 
 train_image = cv2.imread('images/in1.png', 0)
 #crop the image for consistency
-h1 = 300
+h1 = 0
 h2 = 303
-l1 = 600
-l2 = 603
-H1 = 300
-H2 = 304
-L1 = 600
-L2 = 604
+l1 = 0
+l2 = 303
+H1 = 0
+H2 = 370
+L1 = 0
+L2 = 370
 nu=0.1 #our value of nu
 
 train_image = np.vectorize(lambda x: x/256.0)(train_image)
@@ -23,8 +23,8 @@ end = np.reshape(img_out, (1, (L2-L1)*(H2-H1)))
 #initialize layer dimensions and transition weights
 dimensions = [start.shape[1], 10, end.shape[1]]
 #dimensions = [10, 5, 10]
-transitions = [(4.0/dimensions[0]) * (np.random.rand(dimensions[0], dimensions[1])),\
-                (4.0/dimensions[1]) * (np.random.rand(dimensions[1], dimensions[2]))]
+transitions = [(2.5/dimensions[0]) * (np.random.rand(dimensions[0], dimensions[1])),\
+                (2.5/dimensions[1]) * (np.random.rand(dimensions[1], dimensions[2]))]
 
 print("Initialized transitions")
 def back_propagation():
@@ -62,25 +62,27 @@ def back_propagation():
             transitions[x][y]-=(nu*intermediate_values[x][0][y])*deltas[x+1][0] #move 0.1 times the gradient at a time
     
 def backProp():
-    layerins = [start]
+    layersin = [start]
     current = start
     transLen = len(transitions)
     deltastream = []
     for i in range(transLen):
         current = np.dot(current, transitions[i])
         current = np.tanh(current)
-        layerin.append(current)
+        layersin.append(current)
     #length of layersin is len(transitions) + 1
     #maintain a series of delta for each output neuron
     errorgrad = []
     desiredoutput = end
-    actualoutput = layerin[transLen]
+    actualoutput = layersin[transLen][0]
+    print "desiredoutput", desiredoutput
+    print "actualoutput", actualoutput
     for i in range(len(end)):    
         currentdelta = np.array([1 - ((actualoutput[i]) ** 2)])
         deltacollection = [currentdelta]
         for i in range(transLen-1):
             if (i == 0):
-                currentdelta = np.dot(currentdelta, transitions[transLen-1][i])\
+                currentdelta = np.dot(currentdelta[0], transitions[transLen-1][i])\
                     * (1 - layersin[transLen-1] * layersin[transLen-1])
             else:
                 currentdelta = np.dot(currentdelta,transitions[transLen-i-1].T)\
@@ -95,12 +97,12 @@ def backProp():
         for j in range(len(deltastream[i])):
             errorgradterm += np.dot(layersin[i].T, deltastream[j][i]) *\
                              (actualoutput[j] - desiredoutput[j])
-        errorgrad.append(errorgradterm)
+        errorgrad.append(errorgradterm/len(transitions))
     #length of errorgrad is the same as length of transitions.
     #errorgrad[i] is gradient of error with respect to weight matrix i
-    #I deleted the regularization stuff because it was confusing and didn't
-    #make sense and thought it would be more suitable for later.
-    #updating weights part is not yet complete.
+    for i in range(transLen):
+         transitions[i] -= nu * errorgrad[i]
+
 
 def get_output():
     S = start
@@ -110,22 +112,22 @@ def get_output():
     return S
 #print(transitions[0])
 #print(transitions[1])
-for x in range(0, 100):
+for x in range(0, 1):
     print(x)
-    print("Neural Image")
-    print(get_output())
-    print("Out Image")
-    print(end)
-    print("Transitions1")
-    print(transitions[0])
-    print("Transitions2")
-    print(transitions[1])
-    back_propagation()
+    #print("Neural Image")
+    #print(get_output())
+    #print("Out Image")
+    #print(end)
+    #print("Transitions1")
+    #print(transitions[0])
+    #print("Transitions2")
+    #rint(transitions[1])
+    backProp()
 
 out = get_output()
 
 out = np.reshape(out, (H2-H1, L2-L1))
-out = (np.vectorize(lambda x: (x + 1.0) / 2.0))(out)
+#out = (np.vectorize(lambda x: (x + 1.0) / 2.0))(out)
 
 print("out image")
 print(out)
