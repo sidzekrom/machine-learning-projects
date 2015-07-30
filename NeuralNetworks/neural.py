@@ -49,17 +49,17 @@ def back_propagation():
         for y in range(0, len(operations)):
             value = 1-operations[y]**2
             weights[y] = (np.vectorize(lambda z:z*value))(weights[y])
-		delta_prev = np.dot(deltas[-1], weights)
-		deltas.append(delta_prev)
-	deltas.reverse()
-	#Now, we have the values and the deltas. It is time to update the transitions
-	for x in range(0, len(transitions)):
-		#take the deltas and intermediate_values and array multiply together
-		deltas[x+1]*=intermediate_values[x+1]
-		#Once again, there is probably a faster way to do this
-		#We take the result and scale it by the previous node's value. Then, we add to the transitions, which is now the updated version
-		for y in range(0, len(intermediate_values[x][0])):
-			transitions[x][y]-=(nu*intermediate_values[x][0][y])*deltas[x+1][0] #move 0.1 times the gradient at a time
+        delta_prev = np.dot(deltas[-1], weights)
+        deltas.append(delta_prev)
+    deltas.reverse()
+    #Now, we have the values and the deltas. It is time to update the transitions
+    for x in range(0, len(transitions)):
+        #take the deltas and intermediate_values and array multiply together
+        deltas[x+1]*=intermediate_values[x+1]
+        #Once again, there is probably a faster way to do this
+        #We take the result and scale it by the previous node's value. Then, we add to the transitions, which is now the updated version
+        for y in range(0, len(intermediate_values[x][0])):
+            transitions[x][y]-=(nu*intermediate_values[x][0][y])*deltas[x+1][0] #move 0.1 times the gradient at a time
     
 def backProp():
     layerins = [start]
