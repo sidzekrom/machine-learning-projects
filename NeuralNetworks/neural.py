@@ -40,10 +40,8 @@ def back_propagation():
     deltas.append(2*(intermediate_values[-1]-end))
     #Computing the previous deltas. I believe that the previous deltas should be the next deltas,
     #times (the transpose of the transition matrices with each row scaled up by 1-value^2 of the corresponding
-    #next neuron's value, which is actually stored in intermediate_values!)
-    
+    #next neuron's value, which is actually stored in intermediate_values!)   
     for x in range(len(intermediate_values)-2, -1, -1):
-
         weights    = transitions[x].copy().transpose()
         operations = intermediate_values[x+1][0]
         #multiply the ith row of weights by the ith element of operations
@@ -51,19 +49,18 @@ def back_propagation():
         for y in range(0, len(operations)):
             value = 1-operations[y]**2
             weights[y] = (np.vectorize(lambda z:z*value))(weights[y])
-
-        delta_prev = np.dot(deltas[-1], weights)
-        deltas.append(delta_prev)
-    deltas.reverse()
-    #Now, we have the values and the deltas. It is time to update the transitions
-    for x in range(0, len(transitions)):
-        #take the deltas and intermediate_values and array multiply together
-        deltas[x+1]*=intermediate_values[x+1]
-        #Once again, there is probably a faster way to do this
-        #We take the result and scale it by the previous node's value. Then, we add to the transitions, which is now the updated version
-        for y in range(0, len(intermediate_values[x][0])):
-            transitions[x][y]-=(nu*intermediate_values[x][0][y])*deltas[x+1][0] #move 0.1 times the gradient at a time
-        
+		delta_prev = np.dot(deltas[-1], weights)
+		deltas.append(delta_prev)
+	deltas.reverse()
+	#Now, we have the values and the deltas. It is time to update the transitions
+	for x in range(0, len(transitions)):
+		#take the deltas and intermediate_values and array multiply together
+		deltas[x+1]*=intermediate_values[x+1]
+		#Once again, there is probably a faster way to do this
+		#We take the result and scale it by the previous node's value. Then, we add to the transitions, which is now the updated version
+		for y in range(0, len(intermediate_values[x][0])):
+			transitions[x][y]-=(nu*intermediate_values[x][0][y])*deltas[x+1][0] #move 0.1 times the gradient at a time
+    
 def backProp():
     layerins = [start]
     current = start
@@ -138,4 +135,4 @@ cv2.imshow('output', out)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 """
-#cv2.imwrite('out.png', img_in)w
+#cv2.imwrite('out.png', img_in)
