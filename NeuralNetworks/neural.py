@@ -124,6 +124,7 @@ for x in range(0, 100):
 
 out = get_output()
 
+
 out = np.reshape(out, (H2-H1, L2-L1))
 out = (np.vectorize(lambda x: (x + 1.0) / 2.0))(out)
 
