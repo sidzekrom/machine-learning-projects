@@ -11,7 +11,7 @@ H1 = 0
 H2 = 370
 L1 = 0
 L2 = 370
-nu=0.1 #our value of nu
+nu=0.001 #our value of nu
 
 train_image = np.vectorize(lambda x: x/256.0)(train_image)
 img_in = train_image[h1:h2, l1:l2]
@@ -60,7 +60,7 @@ def back_propagation():
         #We take the result and scale it by the previous node's value. Then, we add to the transitions, which is now the updated version
         for y in range(0, len(intermediate_values[x][0])):
             transitions[x][y]-=(nu*intermediate_values[x][0][y])*deltas[x+1][0] #move 0.1 times the gradient at a time
-    
+
 def backProp():
     layersin = [start]
     current = start
@@ -73,35 +73,38 @@ def backProp():
     #length of layersin is len(transitions) + 1
     #maintain a series of delta for each output neuron
     errorgrad = []
-    desiredoutput = end
+    desiredoutput = end[0]
     actualoutput = layersin[transLen][0]
-    print "desiredoutput", desiredoutput
-    print "actualoutput", actualoutput
     for i in range(len(end)):    
         currentdelta = np.array([1 - ((actualoutput[i]) ** 2)])
         deltacollection = [currentdelta]
         for i in range(transLen-1):
             if (i == 0):
-                currentdelta = np.dot(currentdelta[0], transitions[transLen-1][i])\
-                    * (1 - layersin[transLen-1] * layersin[transLen-1])
+                derivative = (1 - layersin[transLen-1] * layersin[transLen-1])
+                update = np.dot(np.matrix(currentdelta),\
+                    np.matrix((transitions[transLen-1].T)[i]))
+                currentdelta = derivative * np.array(update)
             else:
-                currentdelta = np.dot(currentdelta,transitions[transLen-i-1].T)\
-                    * (1 - layersin[transLen-i-1] * layersin[transLen-i-1])
+                derivative = 1 - layersin[transLen-i-1] *\
+                    layersin[transLen-i-1]
+                update = np.dot(np.matrix(currentdelta),\
+                    np.matrix(transitions[transLen-i-1].T))
+                currentdelta = derivative * np.array(update)
             deltacollection.append(currentdelta)
         deltacollection.reverse()
         deltastream.append(deltacollection)
-    for i in range(transLen):
+    for i in range(transLen-1):
         #this iteration we will compute the error derivative with respect to
         #the i-th weight matrix
         errorgradterm = 0
-        for j in range(len(deltastream[i])):
+        for j in range(len(end)):
             errorgradterm += np.dot(layersin[i].T, deltastream[j][i]) *\
                              (actualoutput[j] - desiredoutput[j])
-        errorgrad.append(errorgradterm/len(transitions))
+        errorgrad.append(errorgradterm)
     #length of errorgrad is the same as length of transitions.
     #errorgrad[i] is gradient of error with respect to weight matrix i
-    for i in range(transLen):
-         transitions[i] -= nu * errorgrad[i]
+    for i in range(transLen-1):
+        transitions[i] -= nu * errorgrad[i]
 
 
 def get_output():
@@ -110,30 +113,34 @@ def get_output():
         S = np.dot(S, transitions[x])
         S = np.tanh(S)
     return S
+
+
+
 #print(transitions[0])
 #print(transitions[1])
-for x in range(0, 1):
+for x in range(0, 50):
     print(x)
-    #print("Neural Image")
-    #print(get_output())
-    #print("Out Image")
-    #print(end)
-    #print("Transitions1")
-    #print(transitions[0])
-    #print("Transitions2")
-    #rint(transitions[1])
-    backProp()
+    print("Neural Image")
+    print(get_output())
+    print("Out Image")
+    print(end)
+    print("Transitions1")
+    print(transitions[0])
+    print("Transitions2")
+    print(transitions[1])
+    backProp() #replace this line with #back_propagation to try Jacob and
+               #backProp to try Sid's implementation
 
 out = get_output()
 
 
 out = np.reshape(out, (H2-H1, L2-L1))
-#out = (np.vectorize(lambda x: (x + 1.0) / 2.0))(out)
+out = (np.vectorize(lambda x: (x + 1.0) / 2.0))(out)
 
 print("out image")
 print(out)
-cv2.imshow('image', img_in)
-cv2.imshow('image2', img_out)
+#cv2.imshow('image', img_in)
+#cv2.imshow('image2', img_out)
 cv2.imshow('output', out)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
