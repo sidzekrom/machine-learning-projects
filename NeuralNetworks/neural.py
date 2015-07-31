@@ -4,14 +4,14 @@ import numpy as np
 train_image = cv2.imread('images/in1.png', 0)
 #crop the image for consistency
 h1 = 0
-h2 = 30
+h2 = 300
 l1 = 0
-l2 = 30
+l2 = 300
 H1 = 0
-H2 = 37
+H2 = 370
 L1 = 0
-L2 = 37
-nu=0.1 #our value of nu
+L2 = 370
+nu=0.01 #our value of nu
 
 train_image = np.vectorize(lambda x: x/256.0)(train_image)
 img_in = train_image[h1:h2, l1:l2]
@@ -121,7 +121,6 @@ def get_output():
 #print(transitions[1])
 for x in range(0, 10):
     print(x)
-    '''
     print("Neural Image")
     print(get_output())
     print("Out Image")
@@ -130,8 +129,7 @@ for x in range(0, 10):
     print(transitions[0])
     print("Transitions2")
     print(transitions[1])
-    '''
-    backProp() #replace this line with #back_propagation to try Jacob and
+    back_propagation() #replace this line with #back_propagation to try Jacob and
                #backProp to try Sid's implementation
 
 out = get_output()
@@ -142,8 +140,8 @@ out = (np.vectorize(lambda x: (x + 1.0) / 2.0))(out)
 
 print("out image")
 print(out)
-#cv2.imshow('image', img_in)
-#cv2.imshow('image2', img_out)
+cv2.imshow('image', img_in)
+cv2.imshow('image2', img_out)
 cv2.imshow('output', out)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
