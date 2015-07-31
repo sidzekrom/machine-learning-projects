@@ -97,10 +97,12 @@ def backProp():
         #this iteration we will compute the error derivative with respect to
         #the i-th weight matrix
         errorgradterm = 0
+        ithoutput = layersin[i].T
         for j in range(len(end[0])):
-            derivative = np.dot(layersin[i].T, deltastream[j][i])
-            errorgradterm += derivative *\
+            errorgradterm += deltastream[j][i] *\
                              (actualoutput[j] - desiredoutput[j])
+        #now errorgradterm is the sum of all deltas
+        errorgradterm = np.dot(ithoutput, errorgradterm)
         errorgrad.append(errorgradterm)
     #length of errorgrad is the same as length of transitions.
     #errorgrad[i] is gradient of error with respect to weight matrix i
@@ -129,7 +131,7 @@ for x in range(0, 10):
     print(transitions[0])
     print("Transitions2")
     print(transitions[1])
-    back_propagation() #replace this line with #back_propagation to try Jacob and
+    backProp() #replace this line with #back_propagation to try Jacob and
                #backProp to try Sid's implementation
 
 out = get_output()
