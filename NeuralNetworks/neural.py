@@ -11,7 +11,7 @@ H1 = 0
 H2 = 370
 L1 = 0
 L2 = 370
-nu=0.01 #our value of nu
+nu=0.001 #our value of nu
 
 train_image = np.vectorize(lambda x: x/256.0)(train_image)
 img_in = train_image[h1:h2, l1:l2]
@@ -21,6 +21,8 @@ start = np.reshape(img_in, (1, (l2-l1)*(h2-h1)))
 end = np.reshape(img_out, (1, (L2-L1)*(H2-H1)))
 #Begin neural networks now
 #initialize layer dimensions and transition weights
+np.random.seed(1)
+
 dimensions = [start.shape[1], 10, end.shape[1]]
 #dimensions = [10, 5, 10]
 transitions = [(2.5/dimensions[0]) * (np.random.rand(dimensions[0], dimensions[1])),\
@@ -75,11 +77,12 @@ def backProp():
     errorgrad = []
     desiredoutput = end[0]
     actualoutput = layersin[transLen][0]
+    deltaseed = 1 - ((actualoutput) ** 2)
     for i in range(len(end[0])):    
         currentdelta = np.array([1 - ((actualoutput[i]) ** 2)])
         deltacollection = [currentdelta]
-        for i in range(transLen-1):
-            if (i == 0):
+        for j in range(transLen-1):
+            if (j == 0):
                 derivative = (1 - layersin[transLen-1] * layersin[transLen-1])
                 update = np.dot(np.matrix(currentdelta),\
                     np.matrix((transitions[transLen-1].T)[i]))
@@ -93,20 +96,26 @@ def backProp():
             deltacollection.append(currentdelta)
         deltacollection.reverse()
         deltastream.append(deltacollection)
-    for i in range(transLen-1):
+    for i in range(transLen):
         #this iteration we will compute the error derivative with respect to
         #the i-th weight matrix
         errorgradterm = 0
         ithoutput = layersin[i].T
-        for j in range(len(end[0])):
-            errorgradterm += deltastream[j][i] *\
-                             (actualoutput[j] - desiredoutput[j])
+        if (i == transLen-1):
+            errorgradterm = np.matrix([deltaseed]) *\
+                    (actualoutput[j] - desiredoutput[j])
+        else:    
+            for j in range(len(end[0])):
+                errorgradterm += deltastream[j][i] *\
+                         (actualoutput[j] - desiredoutput[j])
         #now errorgradterm is the sum of all deltas
         errorgradterm = np.dot(ithoutput, errorgradterm)
         errorgrad.append(errorgradterm)
     #length of errorgrad is the same as length of transitions.
     #errorgrad[i] is gradient of error with respect to weight matrix i
-    for i in range(transLen-1):
+    for i in range(transLen):
+        #print transitions[i].shape
+        #print errorgrad[i].shape
         transitions[i] -= nu * errorgrad[i]
 
 
@@ -123,6 +132,7 @@ def get_output():
 #print(transitions[1])
 for x in range(0, 10):
     print(x)
+    #'''
     print("Neural Image")
     print(get_output())
     print("Out Image")
@@ -131,7 +141,8 @@ for x in range(0, 10):
     print(transitions[0])
     print("Transitions2")
     print(transitions[1])
-    backProp() #replace this line with #back_propagation to try Jacob and
+    #'''
+    back_propagation() #replace this line with #back_propagation to try Jacob and
                #backProp to try Sid's implementation
 
 out = get_output()
