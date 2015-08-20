@@ -19,6 +19,8 @@ img_out = train_image[H1:H2, L1:L2]
 #make it into a long array
 start = np.reshape(img_in, (1, (l2-l1)*(h2-h1)))
 end = np.reshape(img_out, (1, (L2-L1)*(H2-H1)))
+in_imgs = [start] #what will contain our input data
+out_imgs = [end] #what will contain our output data
 #Begin neural networks now
 #initialize layer dimensions and transition weights
 np.random.seed(1)
@@ -28,9 +30,8 @@ dimensions = [start.shape[1], 10, end.shape[1]]
 transitions = [(2.5/dimensions[0]) * (np.random.rand(dimensions[0], dimensions[1])),\
                 (2.5/dimensions[1]) * (np.random.rand(dimensions[1], dimensions[2]))]
 
-print("Initialized transitions")
-def back_propagation():
-    S = start
+def back_propagation(in_img, out_img):
+    S = in_img
     intermediate_values = [S]
     for x in range(0, len(transitions)):
         S = np.dot(S, transitions[x])
@@ -39,7 +40,7 @@ def back_propagation():
     #deltas are the way that the error function changes as a specific node changes. It is in reverse order
     deltas = []
     #we use RMS error. Therefore, this is the last delta value
-    deltas.append(2*(intermediate_values[-1]-end))
+    deltas.append(2*(intermediate_values[-1]-out_img))
     #Computing the previous deltas. I believe that the previous deltas should be the next deltas,
     #times (the transpose of the transition matrices with each row scaled up by 1-value^2 of the corresponding
     #next neuron's value, which is actually stored in intermediate_values!)   
@@ -61,11 +62,16 @@ def back_propagation():
         #Once again, there is probably a faster way to do this
         #We take the result and scale it by the previous node's value. Then, we add to the transitions, which is now the updated version
         for y in range(0, len(intermediate_values[x][0])):
-            transitions[x][y]-=(nu*intermediate_values[x][0][y])*deltas[x+1][0] #move 0.1 times the gradient at a time
+            transitions[x][y]-=(nu*intermediate_values[x][0][y])*deltas[x+1][0]
 
-def backProp():
-    layersin = [start]
-    current = start
+def neural_net():
+    #This neural net function will use stochastic gradient descent and weight elimination
+
+
+
+def backProp(layersin, current):
+    #layersin = [start]
+    #current = start
     transLen = len(transitions)
     deltastream = []
     for i in range(transLen):
@@ -119,32 +125,15 @@ def backProp():
         transitions[i] -= nu * errorgrad[i]
 
 
-def get_output():
-    S = start
+def get_output(test):
+    #once we have trained the weights, call get_output on a test image
+    S = test
     for x in range(0, len(transitions)):
         S = np.dot(S, transitions[x])
         S = np.tanh(S)
     return S
 
-
-
-#print(transitions[0])
-#print(transitions[1])
-for x in range(0, 10):
-    print(x)
-    #'''
-    print("Neural Image")
-    print(get_output())
-    print("Out Image")
-    print(end)
-    print("Transitions1")
-    print(transitions[0])
-    print("Transitions2")
-    print(transitions[1])
-    #'''
-    back_propagation() #replace this line with #back_propagation to try Jacob and
-               #backProp to try Sid's implementation
-
+"""
 out = get_output()
 
 
@@ -159,4 +148,5 @@ cv2.imshow('output', out)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-#cv2.imwrite('out.png', img_in)
+cv2.imwrite('out.png', img_in)
+"""
