@@ -1,31 +1,19 @@
 import cv2
 import numpy as np
+from random import randint
 
-train_image = cv2.imread('images/in1.png', 0)
-#crop the image for consistency
-h1 = 0
-h2 = 300
-l1 = 0
-l2 = 300
-H1 = 0
-H2 = 370
-L1 = 0
-L2 = 370
+train_image = cv2.imread('images/out1.png', 0) #black and white for now
+# the cropping of the images
+height = 684
+width = 944
 nu=0.001 #our value of nu
-
 train_image = np.vectorize(lambda x: x/256.0)(train_image)
-img_in = train_image[h1:h2, l1:l2]
-img_out = train_image[H1:H2, L1:L2]
-#make it into a long array
-start = np.reshape(img_in, (1, (l2-l1)*(h2-h1)))
-end = np.reshape(img_out, (1, (L2-L1)*(H2-H1)))
-in_imgs = [start] #what will contain our input data
-out_imgs = [end] #what will contain our output data
+print(np.shape(train_image))
 #Begin neural networks now
 #initialize layer dimensions and transition weights
 np.random.seed(1)
-
-dimensions = [start.shape[1], 10, end.shape[1]]
+strip = 25
+dimensions = [(2*strip+1), 30, 1]
 #dimensions = [10, 5, 10]
 transitions = [(2.5/dimensions[0]) * (np.random.rand(dimensions[0], dimensions[1])),\
                 (2.5/dimensions[1]) * (np.random.rand(dimensions[1], dimensions[2]))]
@@ -46,7 +34,7 @@ def back_propagation(in_img, out_img):
     #next neuron's value, which is actually stored in intermediate_values!)   
     for x in range(len(intermediate_values)-2, -1, -1):
         weights    = transitions[x].copy().transpose()
-        operations = intermediate_values[x+1][0]
+        operations = intermediate_values[x+1]
         #multiply the ith row of weights by the ith element of operations
         #probably is a faster way to do it using np.multiply
         for y in range(0, len(operations)):
@@ -61,12 +49,40 @@ def back_propagation(in_img, out_img):
         deltas[x+1]*=intermediate_values[x+1]
         #Once again, there is probably a faster way to do this
         #We take the result and scale it by the previous node's value. Then, we add to the transitions, which is now the updated version
-        for y in range(0, len(intermediate_values[x][0])):
-            transitions[x][y]-=(nu*intermediate_values[x][0][y])*deltas[x+1][0]
+        for y in range(0, len(intermediate_values[x])):
+            transitions[x][y]-=(nu*intermediate_values[x][y])*deltas[x+1][0]
+
+#slices the image at the y-coordinate (first index of train_image) and then at the x-coordinate. It will wrap around if x is near the edge of the image
+def slicer(y, x):
+    mn = x-strip
+    mx = x+strip+1
+    if(mn < 0):
+        return np.append(train_image[y][mn:], train_image[y][:mx])
+    elif(mx > width):
+        return np.append(train_image[y][mn:], train_image[y][:mx-width])
+    else:
+        return train_image[y][mn:mx]
 
 def neural_net():
     #This neural net function will use stochastic gradient descent and weight elimination
-
+    for x in range(0, 5000):
+        if(x % 1000 == 0):
+            print(x)
+        global height
+        global train_image
+        #select a random point
+        randX = randint(0, width-1)
+        randY = randint(1, height-1)
+        in_img = slicer(randY-1, randX)
+        out_img = np.array(train_image[randY][randX])
+        back_propagation(in_img, out_img)
+        
+    for y in range(0, 100):
+        next_row = np.zeros((1, width))
+        for x in range(0, width):
+            next_row[0][x] = get_output(slicer(height-1, x))[0]
+        train_image = np.append(train_image, next_row, axis=0)
+        height+=1
 
 
 def backProp(layersin, current):
@@ -133,20 +149,12 @@ def get_output(test):
         S = np.tanh(S)
     return S
 
-"""
-out = get_output()
+
+neural_net()
 
 
-out = np.reshape(out, (H2-H1, L2-L1))
-out = (np.vectorize(lambda x: (x + 1.0) / 2.0))(out)
-
-print("out image")
-print(out)
-cv2.imshow('image', img_in)
-cv2.imshow('image2', img_out)
-cv2.imshow('output', out)
+cv2.imshow('image', train_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-cv2.imwrite('out.png', img_in)
-"""
+cv2.imwrite('out.png', train_image)
