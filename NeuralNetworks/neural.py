@@ -2,10 +2,8 @@ import cv2
 import numpy as np
 from random import randint
 
-train_image = cv2.imread('images/out1.png', 0) #black and white for now
-# the cropping of the images
-height = 684
-width = 944
+train_image = cv2.imread('images/easy2.jpg', 0) #black and white for now
+(height, width) = np.shape(train_image)
 nu=0.001 #our value of nu
 train_image = np.vectorize(lambda x: x/256.0)(train_image)
 print(np.shape(train_image))
@@ -13,7 +11,7 @@ print(np.shape(train_image))
 #initialize layer dimensions and transition weights
 np.random.seed(1)
 strip = 25
-dimensions = [(2*strip+1), 30, 1]
+dimensions = [(2*strip+1), 100, 1]
 #dimensions = [10, 5, 10]
 transitions = [(2.5/dimensions[0]) * (np.random.rand(dimensions[0], dimensions[1])),\
                 (2.5/dimensions[1]) * (np.random.rand(dimensions[1], dimensions[2]))]
@@ -76,12 +74,13 @@ def neural_net():
         in_img = slicer(randY-1, randX)
         out_img = np.array(train_image[randY][randX])
         back_propagation(in_img, out_img)
-        
+        #print(transitions)
     for y in range(0, 100):
         next_row = np.zeros((1, width))
         for x in range(0, width):
             next_row[0][x] = get_output(slicer(height-1, x))[0]
         train_image = np.append(train_image, next_row, axis=0)
+        #print(train_image[height, 1:20])
         height+=1
 
 
@@ -152,9 +151,10 @@ def get_output(test):
 
 neural_net()
 
-
+"""
 cv2.imshow('image', train_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+"""
 
-cv2.imwrite('out.png', train_image)
+cv2.imwrite('out.png', np.vectorize(lambda x: x*256)(train_image))
