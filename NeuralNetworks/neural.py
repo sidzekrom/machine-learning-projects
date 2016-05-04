@@ -1,8 +1,9 @@
-import cv2
+#import cv2
 import numpy as np
 from random import randint
-
-train_image = cv2.imread('images/easy2.jpg', 0) #black and white for now
+from scipy.special import expit
+"""
+train_image = cv2.imread('images/easy.jpg', 0) #black and white for now
 (height, width) = np.shape(train_image)
 nu=0.001 #our value of nu
 train_image = np.vectorize(lambda x: x/256.0)(train_image)
@@ -13,43 +14,60 @@ np.random.seed(1)
 strip = 25
 dimensions = [(2*strip+1), 100, 1]
 #dimensions = [10, 5, 10]
+for i in range(0, len(dimensions)-1):
+    transitions.append(0.0001*np.random.rand(dimensions[i]+1, dimensions[i+1]))
+
 transitions = [(2.5/dimensions[0]) * (np.random.rand(dimensions[0], dimensions[1])),\
                 (2.5/dimensions[1]) * (np.random.rand(dimensions[1], dimensions[2]))]
+"""
+class NeuralNet:
+    def __init__(self, dim, X, Y, nu, initial_weight):
+        self.dimensions = dim
+        self.X = X
+        self.Y = Y
+        self.nu = nu
+        self.transitions = []
+        for i in range(0, len(self.dimensions)-1):
+            self.transitions.append(initial_weight*np.random.rand(self.dimensions[i]+1, self.dimensions[i+1]))
+    def back_propagation(self, in_img, out_img):
+        S = in_img
+        intermediate_values = [S]
+        for x in range(0, len(self.transitions)):
+            S = np.dot(np.append(S, [1]), self.transitions[x])
+            S = expit(S)
+            intermediate_values.append(S)
 
-def back_propagation(in_img, out_img):
-    S = in_img
-    intermediate_values = [S]
-    for x in range(0, len(transitions)):
-        S = np.dot(S, transitions[x])
-        S = np.tanh(S)
-        intermediate_values.append(S)
-    #deltas are the way that the error function changes as a specific node changes. It is in reverse order
-    deltas = []
-    #we use RMS error. Therefore, this is the last delta value
-    deltas.append(2*(intermediate_values[-1]-out_img))
-    #Computing the previous deltas. I believe that the previous deltas should be the next deltas,
-    #times (the transpose of the transition matrices with each row scaled up by 1-value^2 of the corresponding
-    #next neuron's value, which is actually stored in intermediate_values!)   
-    for x in range(len(intermediate_values)-2, -1, -1):
-        weights    = transitions[x].copy().transpose()
-        operations = intermediate_values[x+1]
-        #multiply the ith row of weights by the ith element of operations
-        #probably is a faster way to do it using np.multiply
-        for y in range(0, len(operations)):
-            value = 1-operations[y]**2
-            weights[y] = (np.vectorize(lambda z:z*value))(weights[y])
-        delta_prev = np.dot(deltas[-1], weights)
-        deltas.append(delta_prev)
-    deltas.reverse()
-    #Now, we have the values and the deltas. It is time to update the transitions
-    for x in range(0, len(transitions)):
-        #take the deltas and intermediate_values and array multiply together
-        deltas[x+1]*=intermediate_values[x+1]
-        #Once again, there is probably a faster way to do this
-        #We take the result and scale it by the previous node's value. Then, we add to the transitions, which is now the updated version
-        for y in range(0, len(intermediate_values[x])):
-            transitions[x][y]-=(nu*intermediate_values[x][y])*deltas[x+1][0]
+        delta_prev = (2*(intermediate_values[-1]-out_img))
+        #print(intermediate_values)
+        #print(self.transitions)
+        for x in range(len(intermediate_values)-2, -1, -1):
+            arr = (np.vectorize(lambda z:z*z/(z-1)))(intermediate_values[x+1])*delta_prev
+            changes = np.dot(np.reshape(np.append(intermediate_values[x], [1]), (-1, 1)), np.reshape(arr, (1, -1)))
+            delta_prev = np.delete(np.dot(arr, np.transpose(self.transitions[x])), -1)
+            self.transitions[x] -= self.nu*changes
+            #print(delta_prev)
+            #print(changes)
 
+    def learn(self, num_iterations):
+        for x in range(0, num_iterations):
+            row = randint(0, len(self.X)-1)
+            self.back_propagation(X[row], Y[row])
+
+    def predict(self, X, row_num=-1):
+        if(row_num == -1):
+            row_num = len(self.dimensions)-1
+        for x in range(0, row_num):
+            X = expit(np.dot(np.append(X, [1]), self.transitions[x]))
+        return X
+
+X = np.append(np.random.multivariate_normal([0, 0], [[0.5, 0], [0, 0.5]], 500), np.random.multivariate_normal([5, 6], [[0.5, 0], [0, 0.5]], 500), axis = 0)
+Y = [x/500 for x in range(0, 1000)]
+
+dim = [2, 1]
+nn = NeuralNet(dim, X, Y, 0.001, 0.001)
+nn.learn(1000)
+print(nn.predict(np.array([[1, 1]])) )
+print(nn.predict(np.array([[5, 6]])) )
 #slices the image at the y-coordinate (first index of train_image) and then at the x-coordinate. It will wrap around if x is near the edge of the image
 def slicer(y, x):
     mn = x-strip
@@ -63,7 +81,7 @@ def slicer(y, x):
 
 def neural_net():
     #This neural net function will use stochastic gradient descent and weight elimination
-    for x in range(0, 5000):
+    for x in range(0, 1):
         if(x % 1000 == 0):
             print(x)
         global height
@@ -149,12 +167,11 @@ def get_output(test):
     return S
 
 
-neural_net()
-
 """
 cv2.imshow('image', train_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-"""
+
 
 cv2.imwrite('out.png', np.vectorize(lambda x: x*256)(train_image))
+"""
