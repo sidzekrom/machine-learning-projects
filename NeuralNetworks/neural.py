@@ -30,28 +30,37 @@ class NeuralNet:
         for i in range(0, len(self.dimensions)-1):
             self.transitions.append(initial_weight*np.random.rand(self.dimensions[i]+1, self.dimensions[i+1]))
     def back_propagation(self, in_img, out_img):
-        S = in_img
-        intermediate_values = [S]
-        for x in range(0, len(self.transitions)):
-            S = np.dot(np.append(S, [1]), self.transitions[x])
-            S = expit(S)
-            intermediate_values.append(S)
+        changes = [np.zeros(np.shape(self.transitions[x])) for x in range(0, len(self.transitions))]
+        for row in range(0, len(in_img)):
+            S = in_img[row,:]
+            intermediate_values = [S]
+            for x in range(0, len(self.transitions)):
+                S = np.dot(np.append(S, [1]), self.transitions[x])
+                S = expit(S)
+                intermediate_values.append(S)
+            delta_prev = (2*(intermediate_values[-1]-out_img[row,:]))
+            #print(intermediate_values)
+            #print(self.transitions)
+            for x in range(len(intermediate_values)-2, -1, -1):
+                arr = (np.vectorize(lambda z:z-z*z))(intermediate_values[x+1])*delta_prev
+                change = np.dot(np.reshape(np.append(intermediate_values[x], [1]), (-1, 1)), np.reshape(arr, (1, -1)))
+                delta_prev = np.delete(np.dot(arr, np.transpose(self.transitions[x])), -1)
+                changes[x] -= self.nu*change
+                #print(delta_prev)
+                #print(changes)
+        for x in range(0, len(changes)):
+            self.transitions[x] += changes[x]
 
-        delta_prev = (2*(intermediate_values[-1]-out_img))
-        #print(intermediate_values)
-        #print(self.transitions)
-        for x in range(len(intermediate_values)-2, -1, -1):
-            arr = (np.vectorize(lambda z:z*z/(z-1)))(intermediate_values[x+1])*delta_prev
-            changes = np.dot(np.reshape(np.append(intermediate_values[x], [1]), (-1, 1)), np.reshape(arr, (1, -1)))
-            delta_prev = np.delete(np.dot(arr, np.transpose(self.transitions[x])), -1)
-            self.transitions[x] -= self.nu*changes
-            #print(delta_prev)
-            #print(changes)
-
-    def learn(self, num_iterations):
+    def learn(self, num_iterations, batch_size=-1, pieces=10):
+        frac = num_iterations/pieces
         for x in range(0, num_iterations):
-            row = randint(0, len(self.X)-1)
-            self.back_propagation(X[row], Y[row])
+            if((x-1)/frac != x/frac):
+                print(str(x/frac) + "/" + str(pieces))
+            if(batch_size == -1):
+                self.back_propagation(X, Y)
+            else:
+                rand_rows = np.random.randint(len(X), size=batch_size)
+                self.back_propagation(X[rand_rows,:], Y[rand_rows,:])
 
     def predict(self, X, row_num=-1):
         if(row_num == -1):
@@ -61,13 +70,14 @@ class NeuralNet:
         return X
 
 X = np.append(np.random.multivariate_normal([0, 0], [[0.5, 0], [0, 0.5]], 500), np.random.multivariate_normal([5, 6], [[0.5, 0], [0, 0.5]], 500), axis = 0)
-Y = [x/500 for x in range(0, 1000)]
+Y = np.array([[1-x/500] for x in range(0, 1000)])
 
 dim = [2, 1]
 nn = NeuralNet(dim, X, Y, 0.001, 0.001)
-nn.learn(1000)
-print(nn.predict(np.array([[1, 1]])) )
+nn.learn(500, batch_size=-1)
+print(nn.predict(np.array([[0, 0]])) )
 print(nn.predict(np.array([[5, 6]])) )
+
 #slices the image at the y-coordinate (first index of train_image) and then at the x-coordinate. It will wrap around if x is near the edge of the image
 def slicer(y, x):
     mn = x-strip
